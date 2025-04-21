@@ -1,21 +1,13 @@
-name: trial
+name: deploy-model-training-pipeline
 
 on: 
   workflow_dispatch:
 
 jobs:
-
-  login:
-      runs-on: ubuntu-latest
-      steps:
-        - name: Azure Login
-          uses: azure/login@v1
-          with:
-            creds: ${{ secrets.AZURE_CREDENTIALS }}
   get-config:
-        uses: Azure/mlops-templates/.github/workflows/read-yaml.yml@main
-        with:
-          file_name: config-infra-prod.yml
+      uses: Azure/mlops-templates/.github/workflows/read-yaml.yml@main
+      with:
+        file_name: config-infra-prod.yml
 
   create-compute:
       needs: get-config
@@ -28,7 +20,8 @@ jobs:
         cluster_tier: dedicated
         resource_group: ${{ needs.get-config.outputs.resource_group }}
         workspace_name: ${{ needs.get-config.outputs.aml_workspace }}     
-
+      secrets:
+          creds: ${{secrets.AZURE_SECRET}} 
         
   register-dataset:
     needs: get-config
@@ -38,7 +31,8 @@ jobs:
       workspace_name: ${{ needs.get-config.outputs.aml_workspace }}
       name: used-cars-data
       data_file: mlops/azureml/train/data.yml
-
+    secrets:
+      creds: ${{secrets.AZURE_SECRET}}
   
   register-environment:
       needs: get-config
@@ -48,7 +42,8 @@ jobs:
         workspace_name: ${{ needs.get-config.outputs.aml_workspace }}     
         environment_file:  mlops/azureml/train/train-env.yml
         conda_file: data-science/environment/train-conda.yml
-
+      secrets:
+          creds: ${{secrets.AZURE_SECRET}}
       
   run-pipeline:
       needs: [get-config,register-environment,create-compute,register-dataset]
@@ -58,4 +53,5 @@ jobs:
         workspace_name: ${{ needs.get-config.outputs.aml_workspace }}     
         parameters-file:  mlops/azureml/train/newpipeline.yml
         job-name: mlops-pipeline
-
+      secrets:
+          creds: ${{secrets.AZURE_SECRET}}
