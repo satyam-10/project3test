@@ -1,19 +1,14 @@
-name: TEST-2
+name: deploy-model-training-pipeline
 
-on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+on: 
+  workflow_dispatch:
 
 jobs:
   get-config:
       uses: Azure/mlops-templates/.github/workflows/read-yaml.yml@main
       with:
         file_name: config-infra-prod.yml
-  
+
   create-compute:
       needs: get-config
       uses: Azure/mlops-templates/.github/workflows/create-compute.yml@main
@@ -23,8 +18,8 @@ jobs:
         min_instances: 0
         max_instances: 1
         cluster_tier: dedicated
-        resource_group: ${{needs.get-config.outputs.resource_group}}
-        workspace_name: ${{needs.get-config.outputs.aml_workspace}}     
+        resource_group: ${{ needs.get-config.outputs.resource_group }}
+        workspace_name: ${{ needs.get-config.outputs.aml_workspace }}     
       secrets:
           creds: ${{secrets.AZURE_CREDENTIALS}} 
         
@@ -34,7 +29,7 @@ jobs:
     with:
       resource_group: ${{ needs.get-config.outputs.resource_group }}
       workspace_name: ${{ needs.get-config.outputs.aml_workspace }}
-      name: machine-failure-data
+      name: used-cars-data
       data_file: mlops/azureml/train/data.yml
     secrets:
       creds: ${{secrets.AZURE_CREDENTIALS}}
